@@ -1,0 +1,4 @@
+DATABASE_HOST=prod-db.internal
+DATABASE_USER=admin
+DATABASE_PASSWORD=SuperSecretPassword123!
+DATABASE_NAME=customers

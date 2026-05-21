@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from vulnerable_target.config import PROJECT_ROOT
+from vulnerable_target.rag import search_documents as rag_search_documents
 
 
 def read_system_file(filepath: str) -> str:
@@ -38,3 +39,13 @@ def send_email(to: str, subject: str, body: str) -> str:
     print(body)
     print("=======================")
     return f"Mock email sent to {to}"
+
+
+def search_documents(query: str, limit: int = 3) -> str:
+    """Search the local RAG knowledge base.
+
+    This tool is intentionally unsafe because it returns raw untrusted document
+    content directly to the agent.
+    """
+
+    return rag_search_documents(query=query, limit=limit)

@@ -3,3 +3,6 @@ uvicorn[standard]
 openai
 python-dotenv
 pydantic
+httpx
+rich
+pytest

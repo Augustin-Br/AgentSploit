@@ -1,0 +1,32 @@
+{
+  "targets": [
+    {
+      "name": "agentsploit-local",
+      "chat_url": "http://127.0.0.1:8000/chat",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "request": {
+        "message_field": "message",
+        "messages_field": "messages",
+        "supports_multi_turn": true
+      },
+      "response_path": "response",
+      "request_id_path": "request_id",
+      "audit_url": "http://127.0.0.1:8000/audit-log",
+      "feature_endpoints": {
+        "docs": "/docs",
+        "openapi": "/openapi.json",
+        "audit_log": "/audit-log",
+        "documents": "/documents",
+        "ingest": "/ingest"
+      },
+      "limits": {
+        "timeout": 45,
+        "rate_limit_requests": 3,
+        "delay": 0.5
+      }
+    }
+  ]
+}

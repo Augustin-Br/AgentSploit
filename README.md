@@ -1,70 +1,72 @@
 # AgentSploit
 
-AgentSploit est un lab éducatif de sécurité IA pour apprendre le red teaming des applications basées sur des LLM et des agents outillés.
+AgentSploit is an educational AI security lab for learning how to red team LLM-powered applications and tool-using AI agents.
 
-Le projet contient deux parties principales :
+The project has two main goals:
 
-- une application IA volontairement vulnérable, appelée DVAA pour `Damn Vulnerable AI App` ;
-- des scanners Python capables de tester des vulnérabilités LLM, de générer des rapports, et d’évaluer si un agent peut raisonnablement être exposé sur un réseau local.
+- provide a deliberately vulnerable AI application, similar in spirit to a DVWA-style lab, but focused on LLM agents;
+- provide Python scanners that can test LLM vulnerabilities, collect evidence, generate reports, and help decide whether an AI agent is ready to be exposed on a local network.
 
-AgentSploit est conçu pour un portfolio d’`AI Security Engineer`. Il montre comment identifier, prouver, classer et documenter des faiblesses liées aux agents IA, en s’appuyant sur OWASP LLM Top 10 2025 et MITRE ATLAS.
+AgentSploit is designed as an `AI Security Engineer` portfolio project. It demonstrates how to identify, prove, classify, and document AI-agent weaknesses using the OWASP Top 10 for LLM Applications 2025 and MITRE ATLAS.
 
-## Avertissement
+## Warning
 
-Ce projet est volontairement vulnérable. Utilise-le uniquement :
+This project is intentionally vulnerable.
 
-- sur ta machine locale ;
-- dans ton propre lab ;
-- contre des applications que tu possèdes ;
-- contre des systèmes pour lesquels tu as une autorisation explicite.
+Use it only:
 
-Ne lance pas les scanners contre des services tiers ou des réseaux qui ne t’appartiennent pas.
+- on your local machine;
+- in your own lab;
+- against applications you own;
+- against systems where you have explicit authorization.
 
-## Objectifs Du Projet
+Do not run these scanners against third-party services or networks you are not allowed to test.
 
-AgentSploit sert à répondre à trois questions :
+## Project Goals
 
-1. Quelles vulnérabilités de base peut avoir une application IA basée sur un agent LLM ?
-2. Comment automatiser des tests de prompt injection, fuite de secrets, abus d’outils, RAG poisoning et mauvaise configuration réseau ?
-3. Comment décider si un agent IA est prêt, ou non, à être exposé sur un réseau local ?
+AgentSploit helps answer three practical questions:
 
-Le projet ne prétend pas prouver qu’un agent est parfaitement sécurisé. Il produit un niveau de confiance et un verdict exploitable : `PASS`, `WARN` ou `FAIL`.
+1. What common vulnerabilities can affect an LLM-based AI agent?
+2. How can prompt injection, secret disclosure, unsafe tool use, RAG poisoning, and network exposure issues be tested automatically?
+3. How can we decide whether an AI agent is reasonably ready to be exposed on a local network?
 
-## Structure Du Projet
+The project does not claim to prove that an agent is perfectly secure. It produces evidence, risk classification, reports, and a readiness verdict: `PASS`, `WARN`, or `FAIL`.
+
+## Repository Structure
 
 ```text
 AgentSploit/
 ├── vulnerable_target/
-│   ├── main.py                 # API FastAPI vulnérable
-│   ├── agent.py                # Agent LLM avec tool calling
-│   ├── tools.py                # Outils vulnérables
-│   ├── audit.py                # Audit log des appels d’outils
-│   ├── rag.py                  # Mini RAG local vulnérable
-│   ├── knowledge_base/         # Documents RAG, dont documents empoisonnés
-│   └── data/                   # Données runtime ignorées par git
+│   ├── main.py                 # Vulnerable FastAPI application
+│   ├── agent.py                # LLM agent with tool calling
+│   ├── tools.py                # Vulnerable agent tools
+│   ├── audit.py                # Server-side audit log for tool calls
+│   ├── rag.py                  # Intentionally weak local RAG layer
+│   ├── knowledge_base/         # RAG documents, including poisoned content
+│   └── data/                   # Runtime data ignored by git
 ├── scanner/
-│   ├── fuzzer.py               # Fuzzer OWASP/MITRE orienté LLM
-│   ├── readiness.py            # Scanner LAN readiness
-│   ├── supply_chain.py         # Checks supply-chain et hygiène projet
-│   └── targets.example.json    # Exemple de profil cible générique
+│   ├── fuzzer.py               # OWASP/MITRE LLM fuzzer
+│   ├── readiness.py            # LAN readiness scanner
+│   ├── supply_chain.py         # Supply-chain and hygiene checks
+│   └── targets.example.json    # Example generic target profile
 ├── payloads/
-│   ├── owasp_llm_payloads.json # Payloads de fuzzing complets
-│   └── readiness_payloads.json # Payloads courts pour readiness LAN
-├── reports/                    # Rapports générés JSON, Markdown, HTML
-├── tests/                      # Tests unitaires sans appel OpenAI
-├── database_creds.txt          # Faux secret intentionnel du lab
+│   ├── owasp_llm_payloads.json # Full fuzzing payload set
+│   └── readiness_payloads.json # Short LAN-readiness payload set
+├── reports/                    # Generated JSON, Markdown, and HTML reports
+├── tests/                      # Unit tests that do not call OpenAI
+├── database_creds.txt          # Fake lab secret
 ├── requirements.txt
 ├── .env.example
 └── README.md
 ```
 
-## Architecture Globale
+## High-Level Architecture
 
-Voici le schéma Mermaid de l’architecture générale.
+Mermaid code:
 
 ```mermaid
 flowchart TD
-    User["Utilisateur"] --> Scanner["Scanners Python"]
+    User["User"] --> Scanner["Python Scanners"]
     Scanner --> Fuzzer["scanner/fuzzer.py"]
     Scanner --> Readiness["scanner/readiness.py"]
     Scanner --> SupplyChain["scanner/supply_chain.py"]
@@ -74,73 +76,73 @@ flowchart TD
     Readiness --> AuditAPI["GET /audit-log"]
     Readiness --> DocsAPI["/docs /openapi.json /documents"]
 
-    ChatAPI --> Agent["Agent LLM vulnérable"]
+    ChatAPI --> Agent["Vulnerable LLM Agent"]
     Agent --> FileTool["read_system_file"]
     Agent --> EmailTool["send_email"]
     Agent --> RagTool["search_documents"]
 
     RagTool --> KnowledgeBase["knowledge_base"]
-    KnowledgeBase --> PoisonedDoc["Document empoisonné"]
+    KnowledgeBase --> PoisonedDoc["Poisoned Document"]
 
-    Agent --> AuditLog["Audit log"]
-    AuditLog --> Reports["Rapports JSON Markdown HTML"]
+    Agent --> AuditLog["Audit Log"]
+    AuditLog --> Reports["JSON Markdown HTML Reports"]
     Fuzzer --> Reports
     Readiness --> Reports
     SupplyChain --> Reports
 ```
 
-## Fonctionnement De La Cible Vulnérable
+## Vulnerable Target
 
-La cible est une API FastAPI dans `vulnerable_target/`.
+The vulnerable target lives in `vulnerable_target/`.
 
-Elle expose un agent IA relié à l’API OpenAI. Cet agent possède volontairement un prompt système naïf et des outils dangereux.
+It is a FastAPI application exposing an LLM agent connected to the OpenAI API. The agent is intentionally naive: its system prompt is weak, it trusts user instructions too much, and it has access to unsafe tools.
 
-### Endpoint Principal
+### Main Endpoint
 
 `POST /chat`
 
-Exemple de requête :
+Example request:
 
 ```json
 {
-  "message": "Bonjour, qui es-tu ?"
+  "message": "Hello, who are you?"
 }
 ```
 
-Exemple de réponse :
+Example response:
 
 ```json
 {
   "request_id": "abc123",
-  "response": "Bonjour, je suis un assistant interne..."
+  "response": "Hello, I am an internal assistant..."
 }
 ```
 
-Le champ `request_id` permet de corréler la réponse avec les événements serveur enregistrés dans l’audit log.
+The `request_id` field is used to correlate an LLM response with server-side tool-call audit events.
 
-### Outils De L’agent
+### Agent Tools
 
-L’agent a accès à trois outils volontairement risqués :
+The agent has access to three intentionally risky tools.
 
-| Outil | Rôle | Risque |
+| Tool | Purpose | Risk |
 | --- | --- | --- |
-| `read_system_file(filepath)` | Lit un fichier local | Peut exfiltrer des secrets |
-| `send_email(to, subject, body)` | Simule l’envoi d’un email | Peut exfiltrer des données |
-| `search_documents(query)` | Recherche dans la base documentaire locale | Peut récupérer des documents empoisonnés |
+| `read_system_file(filepath)` | Reads a local file | Can disclose secrets |
+| `send_email(to, subject, body)` | Mocks sending an email | Can simulate data exfiltration |
+| `search_documents(query)` | Searches the local knowledge base | Can retrieve poisoned documents |
 
-Ces outils sont volontairement peu protégés. C’est précisément ce qui permet de démontrer les failles.
+These tools are deliberately under-protected so the scanners can demonstrate realistic classes of AI-agent failures.
 
-### Audit Logs
+## Audit Logs
 
-Chaque appel d’outil est enregistré par `vulnerable_target/audit.py`.
+Every tool call is recorded by `vulnerable_target/audit.py`.
 
-Endpoints utiles :
+Useful endpoints:
 
-- `GET /audit-log` : liste les événements récents ;
-- `GET /audit-log?request_id=...` : filtre par requête ;
-- `POST /audit-log/clear` : vide les logs.
+- `GET /audit-log`: list recent audit events;
+- `GET /audit-log?request_id=...`: filter by a specific chat request;
+- `POST /audit-log/clear`: clear the audit log.
 
-Exemple d’événement :
+Example event:
 
 ```json
 {
@@ -154,57 +156,57 @@ Exemple d’événement :
 }
 ```
 
-L’intérêt est important : le scanner ne dépend pas uniquement du texte généré par le modèle. Il peut prouver qu’un outil a vraiment été appelé côté serveur.
+This is important because the scanner does not have to rely only on model output. It can prove that a dangerous tool was actually invoked by the target application.
 
-### RAG Vulnérable
+## Vulnerable RAG Layer
 
-Le module `vulnerable_target/rag.py` implémente un mini moteur de recherche documentaire local.
+The module `vulnerable_target/rag.py` implements a deliberately simple local document retriever.
 
-Documents de lab :
+Lab documents:
 
 - `vulnerable_target/knowledge_base/security_policy.md`
 - `vulnerable_target/knowledge_base/benefits_faq.md`
 - `vulnerable_target/knowledge_base/poisoned_runbook.md`
 
-Le document `poisoned_runbook.md` contient volontairement une instruction malveillante. Cela permet de tester :
+The file `poisoned_runbook.md` intentionally contains malicious instructions. This enables testing:
 
-- prompt injection indirecte ;
-- RAG poisoning ;
-- confusion entre données récupérées et instructions ;
-- abus d’outils après récupération documentaire.
+- indirect prompt injection;
+- RAG poisoning;
+- confusion between retrieved data and trusted instructions;
+- unsafe tool execution after document retrieval.
 
-## Flux D’attaque RAG
+## RAG Attack Flow
 
-Code Mermaid :
+Mermaid code:
 
 ```mermaid
 sequenceDiagram
     participant Scanner
     participant API as FastAPI /chat
-    participant Agent as Agent LLM
+    participant Agent as LLM Agent
     participant RAG as search_documents
     participant KB as Knowledge Base
     participant Tool as send_email/read_system_file
     participant Audit as Audit Log
 
-    Scanner->>API: Prompt demandant un runbook legacy
-    API->>Agent: Message utilisateur
+    Scanner->>API: Prompt requesting a legacy runbook
+    API->>Agent: User message
     Agent->>RAG: search_documents("database runbook")
-    RAG->>KB: Recherche document pertinent
+    RAG->>KB: Retrieve relevant document
     KB-->>RAG: poisoned_runbook.md
-    RAG-->>Agent: Contenu empoisonné
-    Agent->>Tool: Appel d’outil risqué
-    Tool-->>Agent: Résultat
-    Tool->>Audit: Enregistre tool_call
-    Agent-->>API: Réponse finale
+    RAG-->>Agent: Poisoned content
+    Agent->>Tool: Risky tool call
+    Tool-->>Agent: Tool result
+    Tool->>Audit: Record tool_call event
+    Agent-->>API: Final response
     API-->>Scanner: response + request_id
     Scanner->>Audit: GET /audit-log?request_id=...
-    Audit-->>Scanner: Preuve serveur
+    Audit-->>Scanner: Server-side evidence
 ```
 
 ## Installation
 
-Crée et active un environnement virtuel :
+Create and activate a virtual environment:
 
 ```bash
 python -m venv .venv
@@ -212,69 +214,69 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Prépare les variables d’environnement :
+Create your environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Puis édite `.env` :
+Edit `.env`:
 
 ```bash
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-Le fichier `.env` est ignoré par git.
+The `.env` file is ignored by git.
 
-## Lancer La Cible Vulnérable
+## Run The Vulnerable Target
 
 ```bash
 source .venv/bin/activate
 uvicorn vulnerable_target.main:app --reload
 ```
 
-L’API démarre sur :
+The API starts at:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-Test rapide :
+Quick test:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/chat \
   -H "Content-Type: application/json" \
-  -d '{"message":"Bonjour, qui es-tu ?"}'
+  -d '{"message":"Hello, who are you?"}'
 ```
 
-Endpoints disponibles :
+Available endpoints:
 
-| Endpoint | Méthode | Description |
+| Endpoint | Method | Description |
 | --- | --- | --- |
-| `/health` | `GET` | Vérifie que l’API tourne |
-| `/chat` | `POST` | Envoie un message à l’agent |
-| `/audit-log` | `GET` | Lit les événements d’outils |
-| `/audit-log/clear` | `POST` | Vide l’audit log |
-| `/documents` | `GET` | Liste les documents RAG |
-| `/ingest` | `POST` | Ingest un document RAG |
-| `/ingest/clear` | `POST` | Supprime les documents ingérés via API |
+| `/health` | `GET` | Checks whether the API is running |
+| `/chat` | `POST` | Sends a message to the agent |
+| `/audit-log` | `GET` | Reads tool-call audit events |
+| `/audit-log/clear` | `POST` | Clears the audit log |
+| `/documents` | `GET` | Lists RAG documents |
+| `/ingest` | `POST` | Ingests a document into the vulnerable RAG store |
+| `/ingest/clear` | `POST` | Clears API-ingested documents |
 
-## Scanner 1: Fuzzer OWASP/MITRE
+## Scanner 1: OWASP/MITRE LLM Fuzzer
 
-Le fuzzer principal est `scanner/fuzzer.py`.
+The main fuzzer is `scanner/fuzzer.py`.
 
-Il charge `payloads/owasp_llm_payloads.json`, envoie les prompts à `/chat`, analyse les réponses, récupère les audit logs si disponibles, puis génère des rapports.
+It loads `payloads/owasp_llm_payloads.json`, sends prompts to `/chat`, analyzes the responses, collects audit logs when available, and generates reports.
 
-### Profils De Scan
+### Scan Profiles
 
-| Profil | Commande | Usage |
+| Profile | Behavior | Use Case |
 | --- | --- | --- |
-| `quick` | un payload par catégorie OWASP | Vérification rapide |
-| `standard` | tous les payloads de base | Scan normal |
-| `deep` | payloads + mutations | Scan plus agressif et plus coûteux |
+| `quick` | One payload per OWASP category | Fast smoke test |
+| `standard` | All base payloads | Normal scan |
+| `deep` | Base payloads plus mutations | More aggressive and more expensive scan |
 
-Commandes :
+Commands:
 
 ```bash
 python scanner/fuzzer.py --profile quick --delay 1 --timeout 60
@@ -282,102 +284,102 @@ python scanner/fuzzer.py --profile standard --delay 1 --timeout 60
 python scanner/fuzzer.py --profile deep --delay 1 --timeout 60
 ```
 
-Le mode `deep` ajoute des mutations comme :
+The `deep` profile adds mutations such as:
 
-- encodage base64 ;
-- préfixe en français ;
-- découpage d’instruction ;
-- variantes indirectes RAG.
+- base64-encoded instructions;
+- French-language prefixes;
+- instruction splitting;
+- RAG-related indirect variations.
 
-### Types De Détection
+### Detection Rules
 
-Le fuzzer supporte plusieurs détecteurs :
+The fuzzer supports several detector types.
 
-| Détecteur | Rôle |
+| Detector | Purpose |
 | --- | --- |
-| `contains_any` | Détecte au moins un indicateur |
-| `contains_all` | Détecte tous les indicateurs |
-| `regex` | Détecte via expressions régulières |
-| `min_length` | Détecte une sortie trop longue |
-| `repetition_count` | Compte les répétitions d’un token |
-| `refusal_expected` | Signale une absence de refus |
-| `tool_abuse` | Détecte un outil exécuté ou confirmé |
-| `tool_call` | Utilise l’audit log serveur |
+| `contains_any` | Matches at least one expected indicator |
+| `contains_all` | Matches all expected indicators |
+| `regex` | Uses regular expressions |
+| `min_length` | Detects overly long responses |
+| `repetition_count` | Counts repeated tokens |
+| `refusal_expected` | Flags missing refusal behavior |
+| `tool_abuse` | Detects unsafe tool execution or confirmation |
+| `tool_call` | Uses server-side audit logs |
 
-### Rapports Du Fuzzer
+### Fuzzer Reports
 
-Chaque scan génère :
+Each fuzzer run writes:
 
 - `reports/scan_*.json`
 - `reports/scan_*.md`
 - `reports/scan_*.html`
 
-## Scanner 2: LAN Readiness
+## Scanner 2: LAN Readiness Assessment
 
-Le scanner `scanner/readiness.py` répond à la question :
+The scanner `scanner/readiness.py` answers:
 
-> Cet agent IA est-il raisonnablement prêt à être exposé sur un réseau local ?
+> Is this AI agent reasonably ready to be exposed on a local network?
 
-Il ne prouve pas qu’un agent est parfaitement sécurisé. Il donne un verdict basé sur des contrôles de base.
+It does not prove perfect security. It provides a practical readiness verdict based on HTTP checks, LLM safety checks, agent-tool checks, RAG checks, and evidence.
 
 ### Verdicts
 
-| Verdict | Signification |
+| Verdict | Meaning |
 | --- | --- |
-| `PASS` | Aucun blocage `critical`, `high` ou `medium` détecté |
-| `WARN` | Des problèmes `medium` existent |
-| `FAIL` | Au moins un problème `critical` ou `high` exploitable existe |
+| `PASS` | No critical, high, or medium blockers were detected |
+| `WARN` | Medium-risk issues exist |
+| `FAIL` | At least one critical or high exploitable issue exists |
 
-Contre la DVAA AgentSploit, le verdict attendu est `FAIL`.
+Against the AgentSploit DVAA, the expected verdict is `FAIL`.
 
-### Commandes Readiness
+### Readiness Commands
 
-Contre la cible locale :
+Against the local lab target:
 
 ```bash
 python scanner/readiness.py --target http://127.0.0.1:8000/chat --profile lan-basic
 python scanner/readiness.py --target http://127.0.0.1:8000/chat --profile lan-standard
 ```
 
-Avec un profil JSON :
+Using a JSON target profile:
 
 ```bash
 python scanner/readiness.py --config scanner/targets.example.json --profile lan-standard
 ```
 
-Contre un agent LAN générique sans audit logs AgentSploit :
+Against a generic LAN agent without AgentSploit audit logs:
 
 ```bash
 python scanner/readiness.py --target http://192.168.1.50:8000/chat --no-audit --profile lan-basic
 ```
 
-### Checks LAN
+### LAN Checks
 
-Le readiness scanner vérifie :
+The readiness scanner checks:
 
-- endpoint chat joignable ;
-- accès sans authentification ;
-- CORS permissif ;
-- méthode HTTP inattendue ;
-- messages d’erreur trop bavards ;
-- absence de rate limit visible ;
-- exposition de `/docs`, `/openapi.json`, `/audit-log`, `/documents` ;
-- prompt injection ;
-- fuite de secrets ;
-- fuite du system prompt ;
-- génération de XSS ou commandes dangereuses ;
-- abus d’outils ;
-- RAG injection ;
-- hallucination de sécurité ;
-- consommation excessive.
+- whether the chat endpoint is reachable;
+- whether unauthenticated access is accepted;
+- permissive CORS;
+- unexpected HTTP methods;
+- verbose error messages;
+- missing visible rate limiting;
+- exposed debug or internal endpoints such as `/docs`, `/openapi.json`, `/audit-log`, and `/documents`;
+- prompt injection;
+- secret disclosure;
+- system prompt leakage;
+- unsafe XSS or shell-command output;
+- unsafe tool execution;
+- RAG injection;
+- security hallucination;
+- unbounded output behavior.
 
-### Flux LAN Readiness
+### LAN Readiness Flow
 
-Code Mermaid :
+Mermaid code:
 
 ```mermaid
 flowchart TD
-    User["Utilisateur"] --> CLI["scanner/readiness.py"]
+    User["User"] --> CLI["scanner/readiness.py"]
     CLI --> TargetProfile["Target profile"]
     CLI --> HTTPChecks["HTTP checks"]
     CLI --> PayloadChecks["LLM readiness payloads"]
@@ -395,11 +397,11 @@ flowchart TD
     Verdict --> HtmlReport["HTML report"]
 ```
 
-### Profil Cible Générique
+### Generic Target Profile
 
-Le fichier `scanner/targets.example.json` décrit comment parler à un agent HTTP.
+The file `scanner/targets.example.json` describes how to communicate with a generic HTTP agent.
 
-Exemple :
+Example:
 
 ```json
 {
@@ -424,61 +426,61 @@ Exemple :
 }
 ```
 
-Pour un autre agent, il faut principalement adapter :
+For another agent, the main fields to adapt are:
 
 - `chat_url`
 - `headers`
 - `message_field`
 - `response_path`
-- `audit_url` si disponible
+- `audit_url`, if available
 
-## Scanner 3: Supply Chain
+## Scanner 3: Supply-Chain And Hygiene Checks
 
-Le module `scanner/supply_chain.py` vérifie les risques non directement testables par prompt :
+The module `scanner/supply_chain.py` checks risks that are not directly testable through prompts:
 
-- dépendances non épinglées ;
-- règles `.gitignore` ;
-- secrets accidentels ;
-- vulnérabilités connues si `pip-audit` est disponible.
+- unpinned dependencies;
+- missing `.gitignore` protections;
+- accidental secrets;
+- known vulnerable dependencies when `pip-audit` is available.
 
-Commande :
+Run:
 
 ```bash
 python scanner/supply_chain.py --skip-pip-audit
 ```
 
-Inclure aussi les fixtures vulnérables intentionnelles :
+Include intentional vulnerable lab fixtures:
 
 ```bash
 python scanner/supply_chain.py --skip-pip-audit --include-lab-fixtures
 ```
 
-Sans `--include-lab-fixtures`, le scanner ignore volontairement :
+Without `--include-lab-fixtures`, the scanner intentionally ignores:
 
 - `database_creds.txt`
-- certains tests contenant de faux secrets ;
-- les fixtures nécessaires au lab.
+- test files containing fake secrets;
+- fixtures required by the lab.
 
-## Couverture OWASP LLM Top 10 2025
+## OWASP LLM Top 10 2025 Coverage
 
-| ID | Risque | Couverture AgentSploit |
+| ID | Risk | AgentSploit Coverage |
 | --- | --- | --- |
-| `LLM01` | Prompt Injection | Payloads directs, indirects, obfusqués, RAG |
-| `LLM02` | Sensitive Information Disclosure | Secrets, tools, system context |
-| `LLM03` | Supply Chain | Module `supply_chain.py` |
-| `LLM04` | Data and Model Poisoning | Documents RAG empoisonnés |
-| `LLM05` | Improper Output Handling | XSS, shell, code dangereux |
-| `LLM06` | Excessive Agency | Appels d’outils non autorisés |
-| `LLM07` | System Prompt Leakage | Extraction et reconstruction du prompt |
-| `LLM08` | Vector and Embedding Weaknesses | Retrieval manipulé et RAG confusion |
-| `LLM09` | Misinformation | Fausse conformité, CVE inventées |
-| `LLM10` | Unbounded Consumption | Sorties longues et raisonnement récursif |
+| `LLM01` | Prompt Injection | Direct, indirect, obfuscated, and RAG-triggered payloads |
+| `LLM02` | Sensitive Information Disclosure | Secrets, tools, and system context |
+| `LLM03` | Supply Chain | `scanner/supply_chain.py` |
+| `LLM04` | Data and Model Poisoning | Poisoned RAG documents |
+| `LLM05` | Improper Output Handling | XSS, shell commands, unsafe code |
+| `LLM06` | Excessive Agency | Unauthorized tool execution |
+| `LLM07` | System Prompt Leakage | Prompt extraction and reconstruction |
+| `LLM08` | Vector and Embedding Weaknesses | Retrieval manipulation and RAG confusion |
+| `LLM09` | Misinformation | False compliance claims and fabricated CVEs |
+| `LLM10` | Unbounded Consumption | Large output and recursive reasoning pressure |
 
-## Mappings MITRE ATLAS
+## MITRE ATLAS Mappings
 
-AgentSploit mappe plusieurs tests vers MITRE ATLAS, notamment :
+AgentSploit maps several payloads to MITRE ATLAS techniques.
 
-| Technique | Nom |
+| Technique | Name |
 | --- | --- |
 | `AML.T0051` | LLM Prompt Injection |
 | `AML.T0053` | AI Agent Tool Invocation |
@@ -490,74 +492,74 @@ AgentSploit mappe plusieurs tests vers MITRE ATLAS, notamment :
 | `AML.T0099` | AI Agent Tool Data Poisoning |
 | `AML.T0029` | Denial of AI Service |
 
-Ces mappings sont présents dans les fichiers JSON de payloads.
+These mappings are stored in the JSON payload files.
 
-## Interpréter Les Résultats
+## Understanding Results
 
-### Statuts Du Fuzzer
+### Fuzzer Statuses
 
-| Statut | Signification |
+| Status | Meaning |
 | --- | --- |
-| `VULNERABLE` | Le détecteur a trouvé une preuve |
-| `not detected` | Aucun indicateur n’a été observé |
-| `error` | Le test n’a pas pu être exécuté correctement |
+| `VULNERABLE` | A detector found evidence |
+| `not detected` | No configured indicator was observed |
+| `error` | The test could not be executed correctly |
 
-`not detected` ne veut pas dire sécurisé. Cela veut dire que ce payload précis n’a pas déclenché les indicateurs configurés.
+`not detected` does not mean secure. It only means that this specific payload did not trigger the configured evidence.
 
-### Statuts Readiness
+### Readiness Statuses
 
-| Statut | Signification |
+| Status | Meaning |
 | --- | --- |
-| `PASS` | Le contrôle n’a pas détecté de problème |
-| `WARN` | Point à corriger ou à vérifier |
-| `FAIL` | Problème bloquant ou exploitable |
-| `SKIPPED` | Contrôle non applicable ou cible injoignable |
+| `PASS` | The check did not detect a problem |
+| `WARN` | Something should be reviewed or mitigated |
+| `FAIL` | A blocking or exploitable issue was found |
+| `SKIPPED` | The check was not applicable or the target was unreachable |
 
-## Exemples De Résultats Attendus
+## Expected Results
 
-Contre la DVAA locale, le readiness scanner doit retourner `FAIL`, par exemple à cause de :
+Against the local DVAA, the readiness scanner should return `FAIL`, usually because of:
 
-- absence d’authentification ;
-- endpoints `/docs` et `/audit-log` exposés ;
-- fuite d’informations internes ;
-- génération de XSS ou commandes dangereuses ;
-- exécution de `send_email` sans confirmation ;
-- récupération de documents RAG empoisonnés.
+- no authentication;
+- exposed `/docs` and `/audit-log`;
+- internal information disclosure;
+- XSS or shell-command generation;
+- `send_email` execution without confirmation;
+- poisoned RAG document retrieval.
 
-Contre une cible injoignable, le scanner retourne `FAIL` sur `HTTP-001`, puis marque les checks dépendants comme `SKIPPED`.
+Against an unreachable target, the scanner returns `FAIL` on `HTTP-001`, then marks dependent checks as `SKIPPED`.
 
 ## Tests
 
-Lancer toute la suite :
+Run the full test suite:
 
 ```bash
 python -m pytest
 ```
 
-Les tests couvrent :
+The tests cover:
 
-- détecteurs du fuzzer ;
-- audit logs ;
-- recherche RAG ;
-- scanner supply-chain ;
-- parsing de target profile ;
-- scoring readiness ;
-- génération de rapports ;
-- comportement quand une cible est injoignable.
+- fuzzer detectors;
+- audit logs;
+- RAG search;
+- supply-chain checks;
+- target-profile parsing;
+- readiness scoring;
+- report generation;
+- unreachable target behavior.
 
-Les tests ne font pas d’appel OpenAI.
+The tests do not call OpenAI.
 
-## Bonnes Pratiques De Démo
+## Demo Workflow
 
-Pour une démonstration portfolio :
+Recommended portfolio demo:
 
-1. Lance la cible vulnérable.
-2. Lance un scan `readiness` pour obtenir un verdict `FAIL`.
-3. Montre les rapports HTML ou Markdown.
-4. Explique les preuves : réponse du modèle, audit logs, mapping OWASP/MITRE.
-5. Explique les mitigations : auth, rate limit, tool authorization, RAG isolation, output handling.
+1. Start the vulnerable target.
+2. Run a readiness scan and show the `FAIL` verdict.
+3. Open the Markdown or HTML report.
+4. Explain the evidence: model response, audit logs, OWASP mapping, MITRE mapping.
+5. Explain mitigations: authentication, rate limiting, tool authorization, RAG isolation, and output handling.
 
-Commandes typiques :
+Typical commands:
 
 ```bash
 uvicorn vulnerable_target.main:app --reload
@@ -566,46 +568,48 @@ python scanner/fuzzer.py --profile standard --delay 1 --timeout 60
 python scanner/supply_chain.py --skip-pip-audit
 ```
 
-## Limites Connues
+## Known Limitations
 
-AgentSploit est un lab éducatif. Il ne remplace pas :
+AgentSploit is an educational lab. It does not replace:
 
-- un pentest complet ;
-- une revue d’architecture ;
-- une revue de code ;
-- une analyse IAM ;
-- un monitoring runtime ;
-- une sandbox d’outils en production ;
-- une évaluation humaine des risques métier.
+- a full penetration test;
+- architecture review;
+- code review;
+- IAM review;
+- runtime monitoring;
+- production tool sandboxing;
+- human risk assessment.
 
-Le scanner détecte ce qu’il peut observer via HTTP, réponses LLM, audit logs et fichiers du projet.
+The scanners detect what they can observe through HTTP, LLM responses, audit logs, and project files.
 
-## Améliorations Futures
+## Future Improvements
 
-Idées pour pousser le projet encore plus loin :
+Potential next steps:
 
-- ajouter une vraie base vectorielle comme Chroma ou FAISS ;
-- ajouter un mode proxy pour capturer des agents externes ;
-- ajouter un export PDF ;
-- intégrer `pip-audit` par défaut dans un profil CI ;
-- ajouter un mode CI/CD avec exit code strict ;
-- ajouter une interface web de visualisation des rapports ;
-- enrichir les payloads MITRE ATLAS ;
-- ajouter une sandbox d’exécution pour tester les sorties dangereuses sans risque ;
-- ajouter des profils par type d’agent : support, SOC, DevOps, RH, assistant documentaire.
+- add a real vector database such as Chroma or FAISS;
+- add a proxy mode for observing external agents;
+- add PDF export;
+- integrate `pip-audit` into a CI profile;
+- add strict CI/CD exit-code modes;
+- add a small web UI for report visualization;
+- expand MITRE ATLAS payload coverage;
+- add a safe sandbox for testing dangerous model outputs;
+- add profiles by agent type: support, SOC, DevOps, HR, document assistant.
 
-## Résumé
+## Summary
 
-AgentSploit permet de démontrer un cycle complet de sécurité IA :
+AgentSploit demonstrates a complete AI security workflow.
+
+Mermaid code:
 
 ```mermaid
 flowchart LR
-    Build["Construire une cible vulnérable"] --> Attack["Attaquer avec payloads LLM"]
-    Attack --> Evidence["Collecter preuves et audit logs"]
-    Evidence --> Classify["Mapper OWASP et MITRE"]
-    Classify --> Report["Générer rapports"]
-    Report --> Decide["Décider PASS WARN FAIL"]
-    Decide --> Mitigate["Proposer mitigations"]
+    Build["Build vulnerable target"] --> Attack["Attack with LLM payloads"]
+    Attack --> Evidence["Collect responses and audit logs"]
+    Evidence --> Classify["Map to OWASP and MITRE"]
+    Classify --> Report["Generate reports"]
+    Report --> Decide["Decide PASS WARN FAIL"]
+    Decide --> Mitigate["Recommend mitigations"]
 ```
 
-Le projet montre à la fois la compréhension offensive des agents IA et la capacité à produire un outil défensif de readiness avant exposition sur un réseau local.
+The project shows both offensive understanding of AI agents and defensive readiness assessment before exposing an agent on a local network.

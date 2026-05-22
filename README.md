@@ -44,15 +44,25 @@ AgentSploit/
 │   ├── rag.py                  # Intentionally weak local RAG layer
 │   ├── knowledge_base/         # RAG documents, including poisoned content
 │   └── data/                   # Runtime data ignored by git
+├── hardened_target/
+│   ├── main.py                 # Hardened FastAPI application with the same chat API
+│   ├── agent.py                # Guarded LLM agent plus deterministic mock mode
+│   ├── policy.py               # Readable allow/deny policy rules
+│   ├── tool_gateway.py         # Tool authorization and ALLOW/BLOCK decisions
+│   ├── rag_guard.py            # Untrusted retrieval sanitization
+│   ├── output_guard.py         # Secret redaction and response limits
+│   └── knowledge_base/         # Same lab documents behind RAG guardrails
 ├── scanner/
 │   ├── fuzzer.py               # OWASP/MITRE LLM fuzzer
 │   ├── readiness.py            # LAN readiness scanner
 │   ├── supply_chain.py         # Supply-chain and hygiene checks
+│   ├── compare.py              # Before/after vulnerable vs hardened comparison
 │   └── targets.example.json    # Example generic target profile
 ├── payloads/
 │   ├── owasp_llm_payloads.json # Full fuzzing payload set
 │   └── readiness_payloads.json # Short LAN-readiness payload set
 ├── reports/                    # Generated JSON, Markdown, and HTML reports
+├── examples/                   # Static example before/after reports
 ├── tests/                      # Unit tests that do not call OpenAI
 ├── database_creds.txt          # Fake lab secret
 ├── requirements.txt
@@ -131,6 +141,102 @@ The agent has access to three intentionally risky tools.
 | `search_documents(query)` | Searches the local knowledge base | Can retrieve poisoned documents |
 
 These tools are deliberately under-protected so the scanners can demonstrate realistic classes of AI-agent failures.
+
+## Hardened Target And Before/After Benchmark
+
+The hardened target lives in `hardened_target/`. It is a defensive version of the vulnerable target with the same core HTTP contract: `POST /chat` returns `request_id` and `response`, `/health` reports liveness, and `/audit-log` exposes local evidence for lab debugging. It exists to demonstrate a full defensive loop:
+
+```text
+attack -> evidence -> mitigation -> re-test -> before/after report
+```
+
+### Hardened Architecture
+
+```text
+POST /chat
+  -> hardened_target.agent
+  -> ToolGateway
+      -> policy.py file and domain rules
+      -> tools.py local-only mock tools
+      -> audit.py ALLOW/BLOCK decisions
+  -> rag_guard.py sanitized retrieved content
+  -> output_guard.py secret redaction and max response size
+```
+
+The hardened target is intentionally minimal. It is educational, local-only, and not a proof of absolute security.
+
+### Protections
+
+The defensive controls are implemented in small, testable modules:
+
+- `policy.py`: explicit `allowed_file_paths`, `blocked_file_patterns`, `allowed_email_domains`, `require_confirmation_for_sensitive_actions`, `max_tool_calls_per_request`, and `max_response_chars`.
+- `tool_gateway.py`: blocks sensitive actions by default, allows file reads only from allowlisted paths, blocks `.env`, credentials files, private keys, `/etc/passwd`, `/etc/shadow`, and blocks outbound mock messages to non-allowlisted domains.
+- `rag_guard.py`: wraps retrieved documents with `UNTRUSTED RETRIEVED CONTENT`, neutralizes prompt-injection phrases, and prevents retrieved text from becoming trusted instructions.
+- `output_guard.py`: redacts secret-like values, API-key patterns, private keys, environment dumps, and truncates oversized responses.
+- `main.py`: supports optional `X-AgentSploit-Key` authentication for chat and lab evidence endpoints, plus simple in-memory rate limiting by API key or client IP.
+- `agent.py`: supports `AGENTSPLOIT_MOCK_LLM=true` so tests and demos can run without OpenAI.
+
+Blocked tool attempts are logged as `tool_gateway_decision` events with `decision: BLOCK`. This keeps the evidence useful while avoiding confusion between a blocked attempt and an actually executed unsafe tool call.
+
+### Run Vulnerable And Hardened Targets
+
+Terminal 1:
+
+```bash
+source .venv/bin/activate
+uvicorn vulnerable_target.main:app --reload --port 8000
+```
+
+Terminal 2:
+
+```bash
+source .venv/bin/activate
+AGENTSPLOIT_MOCK_LLM=true uvicorn hardened_target.main:app --reload --port 8001
+```
+
+Optional hardened authentication:
+
+```bash
+HARDENED_REQUIRE_API_KEY=true HARDENED_API_KEY=local-lab-key \
+AGENTSPLOIT_MOCK_LLM=true uvicorn hardened_target.main:app --reload --port 8001
+```
+
+### Compare Before And After
+
+Run the same fuzzer profile against both targets and generate JSON plus Markdown comparison reports:
+
+```bash
+python scanner/compare.py \
+  --baseline http://127.0.0.1:8000/chat \
+  --hardened http://127.0.0.1:8001/chat \
+  --profile quick \
+  --delay 0.2
+```
+
+You can also compare two existing fuzzer JSON reports:
+
+```bash
+python scanner/compare.py \
+  --baseline-report reports/scan_baseline.json \
+  --hardened-report reports/scan_hardened.json
+```
+
+Example output shape:
+
+```text
+Baseline findings: 7
+Hardened findings: 0
+Blocked findings: 7
+Remaining findings: 0
+New findings: 0
+Verdict: MITIGATED
+```
+
+Static example reports are included in `examples/before_after_report.md` and `examples/before_after_report.json`.
+
+### Ethics And Scope
+
+Use the vulnerable target, hardened target, fuzzer, readiness scanner, and comparison script only in a local lab or against systems you own and are explicitly authorized to test. Do not scan third-party services. The hardened target demonstrates layered mitigations for education; it is not a production security certification.
 
 ## Audit Logs
 
@@ -541,6 +647,8 @@ The tests cover:
 - fuzzer detectors;
 - audit logs;
 - RAG search;
+- hardened policy, tool gateway, RAG guard, output guard, auth/rate limiting, and mock LLM mode;
+- before/after comparison aggregation;
 - supply-chain checks;
 - target-profile parsing;
 - readiness scoring;

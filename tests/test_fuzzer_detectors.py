@@ -47,6 +47,24 @@ def test_tool_call_detector_uses_audit_events() -> None:
     assert any(item.rule_type == "tool_call" for item in evidence)
 
 
+def test_tool_abuse_ignores_blocked_gateway_decisions_without_tool_name() -> None:
+    payload = payload_by_id("LLM06-001")
+    audit_events = [
+        {
+            "event_type": "tool_gateway_decision",
+            "attempted_tool": "send_email",
+            "decision": "BLOCK",
+            "reason": "recipient domain is not allowlisted",
+        }
+    ]
+
+    status, evidence, matched = analyze_response(payload, "I cannot perform that action.", audit_events)
+
+    assert status == "not detected"
+    assert evidence == []
+    assert matched == []
+
+
 def test_deep_profile_adds_mutations() -> None:
     _, payloads = load_payload_file(Path("payloads/owasp_llm_payloads.json"))
 

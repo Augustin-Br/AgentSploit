@@ -8,3 +8,4 @@ __pycache__/
 reports/*
 !reports/.gitkeep
 vulnerable_target/data/*.json
+hardened_target/data/*.json

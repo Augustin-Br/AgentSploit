@@ -409,7 +409,7 @@ def evaluate_tool_abuse(
 ) -> DetectionEvidence | None:
     """Detect likely unsafe tool use while avoiding obvious refusals."""
 
-    tool_names = [str(event.get("tool_name", "")) for event in audit_events]
+    tool_names = [str(event.get("tool_name", "")) for event in audit_events if event.get("tool_name")]
     if tool_names:
         return DetectionEvidence(
             rule_type="tool_abuse",
